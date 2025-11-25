@@ -1,0 +1,69 @@
+services:
+
+  orchestrator:
+
+    image: livepeer/go-livepeer:latest
+
+    container_name: byoc_orchestrator
+
+    command: "-network arbitrum-one-mainnet -orchestrator -ethUrl https://arb1.arbitrum.io/rpc -ethPassword secret-password -pricePerUnit 1 -serviceAddr=byoc_orchestrator:8935 -orchSecret=orch-secret -v 6"
+
+  gateway:
+
+    image: livepeer/go-livepeer:latest
+
+    container_name: byoc_gateway
+
+    command: "-network arbitrum-one-mainnet -gateway -ethUrl https://arb1.arbitrum.io/rpc -ethPassword secret-password -orchAddr=byoc_orchestrator:8935 -httpAddr=0.0.0.0:9935 -httpIngest -v 6"
+
+    ports:
+
+      - 9935:9935
+
+    depends_on:
+
+      - orchestrator
+
+  pulse:
+
+    build:
+
+      context: ./pulse
+
+      dockerfile: Dockerfile
+
+    image: byoc_pulse
+
+    container_name: byoc_pulse
+
+    ports:
+
+      - 5000:5000
+
+    depends_on:
+
+      - orchestrator
+
+  register_capability:
+
+    build:
+
+      context: ./register-capability
+
+      dockerfile: Dockerfile
+
+    image: byoc_register_capability
+
+    container_name: byoc_register_capability
+
+    depends_on: 
+
+      - pulse
+
+networks:
+
+  default:
+
+    name: byoc_livepeer_network
+
+
